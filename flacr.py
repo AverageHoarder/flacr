@@ -188,11 +188,11 @@ def rsgain_on_path():
         else:
             print("Exiting.")
             sys.exit()
-    elif shutil.which("flac") is None:
+    elif shutil.which("rsgain") is None:
         print("rsgain is not on PATH, add it to PATH or execute the program again without -r.")
         sys.exit()
     else:
-        return
+        return True
 
 def main(args):
     args = parse_arguments()
