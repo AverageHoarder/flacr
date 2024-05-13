@@ -31,11 +31,11 @@ def parse_arguments():
     parser.add_argument('-g', '--guess_count', type=int, default=999_999, const=999_999, nargs="?",
                         help='Guess the total file count of the directory to be displayed when used with -p, default: 999.999.')    
     parser.add_argument('-l', '--log', action='count',
-                        help='Log errors during recompression to flacr.log')
+                        help='Log errors during recompression or testing to flacr.log.')
     parser.add_argument('-m', '--multi_threaded', type=thread_count, default=1, const=1, nargs="?",
                         help='The number of threads used during conversion and replaygain calculation, default: 1.')
     parser.add_argument('-p', '--progress', action='store_true',
-                        help='Show progress bars during scanning. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to install it.')
+                        help='Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to install it.')
     parser.add_argument('-r', '--rsgain', action='store_true',
                         help='Calculate replaygain values with rsgain and save them in the audio file tags.')
     parser.add_argument('-s', '--single_folder', action='store_true',
@@ -101,6 +101,7 @@ def reencode_flac(file_path):
 def run_rsgain(directory, thread_count):
     #set rsgain thread count to at least 2 to prevent windows cli limitations to hinder performance
     if thread_count == 1: thread_count = 2
+    # Define the replay gain calculation command
     rs_gain_command = ["rsgain", "easy", "-m", str(thread_count), directory]
     try:
         subprocess.run(rs_gain_command, check=True)
