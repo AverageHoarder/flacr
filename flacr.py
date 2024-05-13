@@ -25,7 +25,7 @@ def parse_arguments():
         def __int__(self):
             return self._val
         
-    parser = argparse.ArgumentParser(description='Scan for .flac files in subdirectories, recompress them and optionally calculate replaygain tags.')
+    parser = argparse.ArgumentParser(description='Scan for .flac files in subdirectories, recompress them and optionally calculate replay gain tags.')
     parser.add_argument('-d', '--directory',
                         help='The directory that will be recursively scanned for .lrc and .txt files.', type=dir_path, default=".", const=".", nargs="?")
     parser.add_argument('-g', '--guess_count', type=int, default=999_999, const=999_999, nargs="?",
@@ -33,11 +33,11 @@ def parse_arguments():
     parser.add_argument('-l', '--log', action='count',
                         help='Log errors during recompression or testing to flacr.log.')
     parser.add_argument('-m', '--multi_threaded', type=thread_count, default=1, const=1, nargs="?",
-                        help='The number of threads used during conversion and replaygain calculation, default: 1.')
+                        help='The number of threads used during conversion and replay gain calculation, default: 1.')
     parser.add_argument('-p', '--progress', action='store_true',
                         help='Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to install it.')
     parser.add_argument('-r', '--rsgain', action='store_true',
-                        help='Calculate replaygain values with rsgain and save them in the audio file tags.')
+                        help='Calculate replay gain values with rsgain and save them in the audio file tags.')
     parser.add_argument('-s', '--single_folder', action='store_true',
                         help='Only scan the current folder for flac files to recompress, no subdirectories.')
     parser.add_argument('-t', '--test', action='store_true',
@@ -215,7 +215,7 @@ def main(args):
     flac_files = find_flac_files(directory, single_folder, guess_count, progress)
     error_log = []
     error_count = 0
-    # Calculate replaygain tags and write them to the tags
+    # Calculate replay gain tags and write them to the tags
     if calc_rsgain:
         run_rsgain(directory, thread_count)
     if not test_run:
