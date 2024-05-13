@@ -6,12 +6,12 @@ I wrote this because my music converter was out of date and updating the flac en
 Initially this script only used the [flac cli](https://xiph.org/flac/documentation_tools_flac.html) to recompress all .flac files in all subdirectories with the highest compression, verified their integrity and set a fixed padding.
 When recompressing, temporary files are created and the original files are only overwritten if no decoding errors occurred.
 
-Then I also included [rsgain](https://github.com/complexlogic/rsgain) to calculate and write replaygain tags to all music files (not only flac files) in all subdirectories.
+Then I also included [rsgain](https://github.com/complexlogic/rsgain) to calculate and write replay gain tags to all music files (not only flac files) in all subdirectories.
 To speed things up I added multithreading support for recompression and replay gain calculation.
 
 Finally when I was happy with the performance and pondered making this available to others, I added a progress bar, a separate test mode and logging as I suspect that most people don't like watching a blank command line for minutes while the script does its thing.
 
-** What can this script do?
+**What can this script do?**
   * recursively scan for .flac files in a given directory
   * scan for .flac files in a single given directory
   * recompress all .flac files with max compression, a fixed padding of 4KB and verification via flac CLI
@@ -24,11 +24,11 @@ Finally when I was happy with the performance and pondered making this available
 
 ### Prerequisites
 
-**Required:
+**Required:**
 1. [python](https://www.python.org/downloads/) must be installed (tested with python 3.12.3)
 2. [flac](https://xiph.org/flac/download.html) must be on PATH
 
-**Optional:
+**Optional:**
 1. when using -r to calculate replay gain tags, [rsgain](https://github.com/complexlogic/rsgain) must be on PATH
 2. when using -p to show progress bars, [tqdm](https://github.com/tqdm/tqdm) must be installed, I used `pip3 install tqdm`
 
@@ -53,10 +53,10 @@ options:
                         Guess the total file count of the directory to be displayed when used with -p, default: 999.999.
   -l, --log             Log errors during recompression or testing to flacr.log.
   -m [MULTI_THREADED], --multi_threaded [MULTI_THREADED]
-                        The number of threads used during conversion and replaygain calculation, default: 1.
+                        The number of threads used during conversion and replay gain calculation, default: 1.
   -p, --progress        Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm"
                         to install it.
-  -r, --rsgain          Calculate replaygain values with rsgain and save them in the audio file tags.
+  -r, --rsgain          Calculate replay gain values with rsgain and save them in the audio file tags.
   -s, --single_folder   Only scan the current folder for flac files to recompress, no subdirectories.
   -t, --test            Skip recompression and only log decoding errors to console or log when used with -l.
 
