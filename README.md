@@ -43,6 +43,7 @@ If you want to be able to call it from anywhere on your system (which is more co
 
 ### Output from -h:
 
+```
 usage: flacr.py [-h] [-d [DIRECTORY]] [-g [GUESS_COUNT]] [-l] [-m [MULTI_THREADED]] [-p] [-r] [-s] [-t]
 
 options:
@@ -59,6 +60,7 @@ options:
   -r, --rsgain          Calculate replay gain values with rsgain and save them in the audio file tags.
   -s, --single_folder   Only scan the current folder for flac files to recompress, no subdirectories.
   -t, --test            Skip recompression and only log decoding errors to console or log when used with -l.
+```
 
 ### More elaborate explanations in order of importance:
 
