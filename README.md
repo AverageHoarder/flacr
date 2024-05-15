@@ -66,16 +66,13 @@ options:
 
 ### More elaborate explanations in order of importance:
 
-**When called without -t (overwrites music files)**
-##
-**Recompression mode:**
-##
+**When called without -t (overwrites music files)**  
+**Recompression mode:**  
 Uses flac.exe to recompress all .flac files, creates temporary files in the same folder by appending ".tmp" to the filename and only replaces the original files if no errors occurred during decoding. If errors occurred, they are logged and the temporary file is deleted. In that case the original file remains untouched.
 This mode uses the highest level of compression (8), verifies the written files via checksum and also adds a padding of 4096 bytes.
 flac command used: `flac --best --verify --padding=4096 --silent`
 
-**-m, --multi-threaded INT (optional, default=1, min=1, max=thread count of the CPU)**
-##
+**-m, --multi-threaded INT (optional, default=1, min=1, max=thread count of the CPU)**  
 Specify the number of threads which will be used during recompression, verification and replay gain calculation.
 Can drastically increase performance depending on the kind of storage the music resides on.
 For SSDs I recommend using as many threads as your CPU has.
@@ -83,31 +80,25 @@ For HDDs, I would not go above 5-8 threads as that may decrease performance by i
 When in doubt, try and compare performance.
 Notice that rsgain will always be called with at least 2 threads (even if called with -m 1) because of a Windows cli limitation that decreases the performance of rsgain if it is called with only 1 thread.
 
-**-d, --directory PATH (optional, default=".")**
-##
+**-d, --directory PATH (optional, default=".")**  
 When run without -d, the script will be called in the folder it was executed from.
 If -d is supplied, it must be followed by a valid path to a directory, which will be scanned for .flac files.
 
-**-t, --test (optional, skips recompression, only reads music files)**
-##
+**-t, --test (optional, skips recompression, only reads music files)**  
 Test Mode, all found .flac files are decoded via flac CLI with as many threads as specified via -m and errors are logged.
 flac command used: `flac -t --silent`
 
-**-r, --rsgain (optional, writes to tags of music files)**
-##
+**-r, --rsgain (optional, writes to tags of music files)**  
 Calls rsgain in easy mode in the root directory which as many threads as specified via -m. Rsgain then recursively calculates and saves replay gain tags to all music files in all subdirectories. Consult the [Easy Mode](https://github.com/complexlogic/rsgain?tab=readme-ov-file#easy-mode) documentation to learn what it does.
 rsgain command used: `rsgain easy`
 
-**-l, --log**
-##
+**-l, --log**  
 Log errors during recompression or testing to flacr.log.
 
-**-p, --progress (optional)**
-##
+**-p, --progress (optional)**  
 Show progress bars during scanning, testing and recompression. Useful for huge directories.
 
-**-g, --guess_count INT (optional, default=999_999)**
-##
+**-g, --guess_count INT (optional, default=999_999)**  
 Only used when -p is also provided. Guess the number of files in the music directory to allow for a progress bar while scanning the directory. When in doubt, guess a bit high.
 
 ## Common examples
