@@ -64,7 +64,7 @@ def find_flac_files(directory, single_folder, guess_count, progress):
             flac_count = 0
             for file in os.listdir(directory):
                 if file.endswith(".flac"):
-                    flac_files.append(os.path.join(os.path.abspath(root), file))
+                    flac_files.append(os.path.join(os.path.abspath(directory), file))
                     flac_count += 1
                     pbar.set_postfix({"flac files": f" {flac_count}"})
     return flac_files
