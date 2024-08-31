@@ -91,7 +91,7 @@ flac command used:<br>
 `flac -t --silent`
 
 **-r, --rsgain (optional, writes to tags of music files)**  
-Calls rsgain in easy mode in the root directory which as many threads as specified via -m. Rsgain then recursively calculates and saves replay gain tags to all music files in all subdirectories. Consult the [Easy Mode](https://github.com/complexlogic/rsgain?tab=readme-ov-file#easy-mode) documentation to learn what it does.<br>
+Calls rsgain in easy mode in the root directory with as many threads as specified via -m. Rsgain then recursively calculates and saves replay gain tags to all music files in all subdirectories. Consult the [Easy Mode](https://github.com/complexlogic/rsgain?tab=readme-ov-file#easy-mode) documentation to learn what it does.<br>
 rsgain command used:<br>
 `rsgain easy`
 
