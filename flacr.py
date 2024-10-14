@@ -48,7 +48,7 @@ def parse_arguments():
 def find_flac_files(directory, single_folder, progress):
     flac_files = []
     if not single_folder:
-        with tqdm(desc="searching", unit=" files", disable=not progress) as pbar:
+        with tqdm(desc="searching", unit=" files", disable=not progress, ncols=100) as pbar:
             flac_count = 0
             for root, dirs, files in os.walk(directory):
                 for file in files:
@@ -58,7 +58,7 @@ def find_flac_files(directory, single_folder, progress):
                         flac_count += 1
                         pbar.set_postfix({"flac files": flac_count})
     else:
-        with tqdm(desc="searching", unit=" files", disable=not progress) as pbar:
+        with tqdm(desc="searching", unit=" files", disable=not progress, ncols=100) as pbar:
             flac_count = 0
             for file in os.listdir(directory):
                 if file.endswith(".flac"):
@@ -221,7 +221,7 @@ def main(args):
             futures = {executor.submit(reencode_flac, filepath): filepath for filepath in flac_files}
             
             # Track progress using tqdm
-            with tqdm(total=len(flac_files), desc="encoding", unit=" files", disable=not progress) as pbar:
+            with tqdm(total=len(flac_files), desc="encoding", unit=" files", disable=not progress, ncols=100) as pbar:
                 for future in concurrent.futures.as_completed(futures):
                     filepath, stderr = future.result()
                     if stderr:
@@ -235,7 +235,7 @@ def main(args):
             futures = {executor.submit(verify_flac, filepath): filepath for filepath in flac_files}
 
             # Track progress using tqdm
-            with tqdm(total=len(flac_files), desc="verifying", unit=" files", disable=not progress) as pbar:
+            with tqdm(total=len(flac_files), desc="verifying", unit=" files", disable=not progress, ncols=100) as pbar:
                 for future in concurrent.futures.as_completed(futures):
                     filepath, stderr = future.result()
                     if stderr:
@@ -250,7 +250,7 @@ def main(args):
         for path, error in error_log:
             print (f"Encountered error when processing file:\n{path}\n{error}")
     percentage = (error_count / len(flac_files)) * 100 if len(flac_files) > 0 else 0
-    print(f"\n{len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage} %.")
+    print(f"\n{len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage:.2f} %.")
 
 if __name__ == "__main__":
     args = parse_arguments()
