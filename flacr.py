@@ -28,8 +28,6 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Scan for .flac files in subdirectories, recompress them and optionally calculate replay gain tags.')
     parser.add_argument('-d', '--directory',
                         help='The directory that will be recursively scanned for .lrc and .txt files.', type=dir_path, default=".", const=".", nargs="?")
-    parser.add_argument('-g', '--guess_count', type=int, default=999_999, const=999_999, nargs="?",
-                        help='Guess the total file count of the directory to be displayed when used with -p, default: 999.999.')    
     parser.add_argument('-l', '--log', action='count',
                         help='Log errors during recompression or testing to flacr.log.')
     parser.add_argument('-m', '--multi_threaded', type=thread_count, default=1, const=1, nargs="?",
@@ -47,10 +45,10 @@ def parse_arguments():
 
     return args
 
-def find_flac_files(directory, single_folder, guess_count, progress):
+def find_flac_files(directory, single_folder, progress):
     flac_files = []
     if not single_folder:
-        with tqdm(total = guess_count, desc="searching", unit=" files", disable=not progress) as pbar:
+        with tqdm(desc="searching", unit=" files", disable=not progress) as pbar:
             flac_count = 0
             for root, dirs, files in os.walk(directory):
                 for file in files:
@@ -60,7 +58,7 @@ def find_flac_files(directory, single_folder, guess_count, progress):
                         flac_count += 1
                         pbar.set_postfix({"flac files": f" {flac_count}"})
     else:
-        with tqdm(total = guess_count, desc="searching", unit=" files", disable=not progress) as pbar:
+        with tqdm(desc="searching", unit=" files", disable=not progress) as pbar:
             flac_count = 0
             for file in os.listdir(directory):
                 if file.endswith(".flac"):
@@ -197,7 +195,6 @@ def rsgain_on_path():
 def main(args):
     args = parse_arguments()
     directory = args.directory
-    guess_count = args.guess_count
     log_to_disk = args.log
     thread_count = int(args.multi_threaded)
     progress = args.progress
@@ -212,7 +209,7 @@ def main(args):
         calc_rsgain = rsgain_on_path()
 
     # Collect paths of all .flac files
-    flac_files = find_flac_files(directory, single_folder, guess_count, progress)
+    flac_files = find_flac_files(directory, single_folder, progress)
     error_log = []
     error_count = 0
     # Calculate replay gain tags and write them to the tags
