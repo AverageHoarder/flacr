@@ -56,7 +56,7 @@ def find_flac_files(directory, single_folder, progress):
                     if file.endswith(".flac"):
                         flac_files.append(os.path.join(os.path.abspath(root), file))
                         flac_count += 1
-                        pbar.set_postfix({"flac files": f" {flac_count}"})
+                        pbar.set_postfix({"flac files": flac_count})
     else:
         with tqdm(desc="searching", unit=" files", disable=not progress) as pbar:
             flac_count = 0
@@ -64,7 +64,7 @@ def find_flac_files(directory, single_folder, progress):
                 if file.endswith(".flac"):
                     flac_files.append(os.path.join(os.path.abspath(directory), file))
                     flac_count += 1
-                    pbar.set_postfix({"flac files": f" {flac_count}"})
+                    pbar.set_postfix({"flac files": flac_count})
     return flac_files
     
 def verify_flac(file_path):
@@ -227,7 +227,7 @@ def main(args):
                     if stderr:
                         error_log.append((filepath, stderr))
                         error_count += 1
-                        pbar.set_postfix({"errors": f" {error_count}"})
+                        pbar.set_postfix({"errors": error_count})
                     pbar.update(1)
     else:
         with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
@@ -241,7 +241,7 @@ def main(args):
                     if stderr:
                         error_log.append((filepath, stderr))
                         error_count += 1
-                        pbar.set_postfix({"errors": f" {error_count}"})
+                        pbar.set_postfix({"errors": error_count})
                     pbar.update(1)
     
     if log_to_disk:
