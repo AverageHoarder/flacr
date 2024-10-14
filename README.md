@@ -44,7 +44,7 @@ If you want to be able to call it from anywhere on your system (which is more co
 ### Output from -h:
 
 ```
-usage: flacr.py [-h] [-d [DIRECTORY]] [-g [GUESS_COUNT]] [-l] [-m [MULTI_THREADED]] [-p] [-r] [-s] [-t]
+usage: flacr.py [-h] [-d [DIRECTORY]] [-l] [-m [MULTI_THREADED]] [-p] [-r] [-s] [-t]
 
 Scan for .flac files in subdirectories, recompress them and optionally calculate replay gain tags.
 
@@ -52,13 +52,11 @@ options:
   -h, --help            show this help message and exit
   -d [DIRECTORY], --directory [DIRECTORY]
                         The directory that will be recursively scanned for .lrc and .txt files.
-  -g [GUESS_COUNT], --guess_count [GUESS_COUNT]
-                        Guess the total file count of the directory to be displayed when used with -p, default: 999.999.
   -l, --log             Log errors during recompression or testing to flacr.log.
   -m [MULTI_THREADED], --multi_threaded [MULTI_THREADED]
                         The number of threads used during conversion and replay gain calculation, default: 1.
-  -p, --progress        Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm"
-                        to install it.
+  -p, --progress        Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to
+                        install it.
   -r, --rsgain          Calculate replay gain values with rsgain and save them in the audio file tags.
   -s, --single_folder   Only scan the current folder for flac files to recompress, no subdirectories.
   -t, --test            Skip recompression and only log decoding errors to console or log when used with -l.
@@ -101,8 +99,6 @@ Log errors during recompression or testing to flacr.log.
 **-p, --progress (optional)**  
 Show progress bars during scanning, testing and recompression. Useful for huge directories.
 
-**-g, --guess_count INT (optional, default=999_999)**  
-Only used when -p is also provided. Guess the number of files in the music directory to allow for a progress bar while scanning the directory. When in doubt, guess a bit high.
 
 ## Common examples
 
@@ -113,11 +109,11 @@ Only used when -p is also provided. Guess the number of files in the music direc
 * log to file instead<br>
 `flacr.py -tl -m 4"`
   
-* with progress bar and guessed count of 300k files added<br>
-`flacr.py -tlp -m 4 -g 300000`
+* with progress bar<br>
+`flacr.py -tlp -m 4`
 
 * with directory<br>
-`flacr.py -tlp -m 4 -g 300000 -d "D:\Test"`
+`flacr.py -tlp -m 4 -d "D:\Test"`
 
 ### Case 2: recompress flac files, no replay gain:
 * log errors to console, 4 threads<br>
@@ -126,11 +122,11 @@ Only used when -p is also provided. Guess the number of files in the music direc
 * log to file instead<br>
 `flacr.py -l -m 4` 
 
-* with progress bar and guessed count of 300k files added<br>
-`flacr.py -lp -m 4 -g 300000`
+* with progress bar<br>
+`flacr.py -lp -m 4`
 
 * with directory<br>
-`flacr.py -lp -m 4 -g 300000 -d "D:\Test"`
+`flacr.py -lp -m 4 -d "D:\Test"`
 
 ### Case 3: recompress flac files, calculate replay gain:
 * log errors to console, 4 threads<br>
@@ -139,11 +135,11 @@ Only used when -p is also provided. Guess the number of files in the music direc
 * log to file instead<br>
 `flacr.py -rl -m 4`
   
-* with progress bar and guessed count of 300k files added<br>
-`flacr.py -rlp -m 4 -g 300000`
+* with progress bar<br>
+`flacr.py -rlp -m 4`
 
 * with directory<br>
-`flacr.py -rlp -m 4 -g 300000 -d "D:\Test"`
+`flacr.py -rlp -m 4 -d "D:\Test"`
 
 ## How to tweak behavior
 
