@@ -34,6 +34,8 @@ def parse_arguments():
                         help='The number of threads used during conversion and replay gain calculation, default: 1.')
     parser.add_argument('-p', '--progress', action='store_true',
                         help='Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to install it.')
+    parser.add_argument('-Q', '--quick', action='store_true',
+                        help='Equal to using -m with the max available threadcount, -r to calculate replay gain values and -p to display a progress bar.')
     parser.add_argument('-r', '--rsgain', action='store_true',
                         help='Calculate replay gain values with rsgain and save them in the audio file tags.')
     parser.add_argument('-s', '--single_folder', action='store_true',
@@ -43,6 +45,11 @@ def parse_arguments():
 
     args: argparse.Namespace = parser.parse_args()
 
+    if args.quick:
+        setattr(args, "multi_threaded", multiprocessing.cpu_count())
+        setattr(args, "rsgain", True)
+        setattr(args, "progress", True)
+ 
     return args
 
 def find_flac_files(directory, single_folder, progress):
