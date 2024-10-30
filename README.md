@@ -44,7 +44,7 @@ If you want to be able to call it from anywhere on your system (which is more co
 ### Output from -h:
 
 ```
-usage: flacr.py [-h] [-d [DIRECTORY]] [-l] [-m [MULTI_THREADED]] [-p] [-r] [-s] [-t]
+usage: flacr.py [-h] [-d [DIRECTORY]] [-l] [-m [MULTI_THREADED]] [-p] [-Q] [-r] [-s] [-t]
 
 Scan for .flac files in subdirectories, recompress them and optionally calculate replay gain tags.
 
@@ -55,8 +55,10 @@ options:
   -l, --log             Log errors during recompression or testing to flacr.log.
   -m [MULTI_THREADED], --multi_threaded [MULTI_THREADED]
                         The number of threads used during conversion and replay gain calculation, default: 1.
-  -p, --progress        Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to
-                        install it.
+  -p, --progress        Show progress bars during scanning/recompression/testing. Useful for huge directories.
+                        Requires tqdm, use "pip3 install tqdm" to install it.
+  -Q, --quick           Equal to using -m with the max available threadcount, -r to calculate replay gain values and
+                        -p to display a progress bar.
   -r, --rsgain          Calculate replay gain values with rsgain and save them in the audio file tags.
   -s, --single_folder   Only scan the current folder for flac files to recompress, no subdirectories.
   -t, --test            Skip recompression and only log decoding errors to console or log when used with -l.
@@ -99,6 +101,9 @@ Log errors during recompression or testing to flacr.log.
 **-p, --progress (optional)**  
 Show progress bars during scanning, testing and recompression. Useful for huge directories.
 
+**-Q, --quick (optional)**  
+Alias for -r -p and -m with all available threads to quickly recompress and calculate replay gain tags.
+
 
 ## Common examples
 
@@ -129,6 +134,9 @@ Show progress bars during scanning, testing and recompression. Useful for huge d
 `flacr.py -lp -m 4 -d "D:\Test"`
 
 ### Case 3: recompress flac files, calculate replay gain:
+* use all available threads and display progress bars<br>
+`flacr.py -Q`
+
 * log errors to console, 4 threads<br>
 `flacr.py -r -m 4`
 
