@@ -98,10 +98,14 @@ def reencode_flac(file_path):
         else:
             # Replace the original file with the temporary file
             try:
-                os.replace(temp_file_path, file_path)
-            except PermissionError:
+                os.remove(file_path)
+                os.rename(temp_file_path, file_path)
+            except PermissionError as e:
                 print(f"Could not replace {file_path} with {temp_file_path}. Deleting temporary file: {temp_file_path}.")
-                os.remove(temp_file_path)
+                # Only delete the temp file if the original file was not deleted already
+                if os.path.isfile(file_path):
+                    os.remove(temp_file_path)
+                return file_path, e.strerror
         return file_path, result.stderr
     except subprocess.CalledProcessError as e:
         # If an error occurs, return the filepath and stderr
