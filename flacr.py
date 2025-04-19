@@ -8,6 +8,7 @@ import getpass
 import concurrent.futures
 from tqdm import tqdm
 from datetime import datetime
+import re
 
 def parse_arguments():
     def dir_path(path):
@@ -28,27 +29,35 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Scan for .flac files in subdirectories, recompress them and optionally calculate replay gain tags.')
     parser.add_argument('-d', '--directory',
                         help='The directory that will be recursively scanned for .lrc and .txt files.', type=dir_path, default=".", const=".", nargs="?")
+    parser.add_argument('-j', action='store_true',
+                        help='flac >=1.5.0: Encode 1 file at a time with multi-threading (threadcount specified via -m) instead of encoding multiple files concurrently.')
     parser.add_argument('-l', '--log', action='count',
                         help='Log errors during recompression or testing to flacr.log.')
     parser.add_argument('-m', '--multi_threaded', type=thread_count, default=1, const=1, nargs="?",
                         help='The number of threads used during conversion and replay gain calculation, default: 1.')
     parser.add_argument('-p', '--progress', action='store_true',
                         help='Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to install it.')
-    parser.add_argument('-Q', '--quick', action='store_true',
-                        help='Equal to using -m with the max available threadcount, -r to calculate replay gain values and -p to display a progress bar.')
     parser.add_argument('-r', '--rsgain', action='store_true',
                         help='Calculate replay gain values with rsgain and save them in the audio file tags.')
     parser.add_argument('-s', '--single_folder', action='store_true',
                         help='Only scan the current folder for flac files to recompress, no subdirectories.')
     parser.add_argument('-t', '--test', action='store_true',
                         help='Skip recompression and only log decoding errors to console or log when used with -l.')
+    parser.add_argument('-Q', '--quick', action='store_true',
+                        help='Equal to using -m with the max available threadcount, -r to calculate replay gain values and -p to display a progress bar.')
+    parser.add_argument('-S', '--sequential', action='store_true',
+                        help='Equal to using -m 4 -j to encode 1 file at a time with 4 threads, -r to calculate replay gain values and -p to display a progress bar.')
 
     args: argparse.Namespace = parser.parse_args()
 
-    if args.quick:
-        setattr(args, "multi_threaded", multiprocessing.cpu_count())
+    if args.quick or args.sequential:
         setattr(args, "rsgain", True)
         setattr(args, "progress", True)
+    if args.quick:
+        setattr(args, "multi_threaded", multiprocessing.cpu_count())
+    if args.sequential:
+        setattr(args, "multi_threaded", (4 if 4 <= multiprocessing.cpu_count() else multiprocessing.cpu_count()))
+        setattr(args, "j", True)
  
     return args
 
@@ -83,12 +92,17 @@ def verify_flac(file_path):
     except subprocess.CalledProcessError as e:
         return file_path, e.stderr
 
-def reencode_flac(file_path):
+def reencode_flac(file_path, thread_count=1):
     # Define the temporary output file path
     temp_file_path = file_path + ".tmp"
 
     # Define the re-encoding command
-    command = ["flac", "--best", "--verify", "--padding=4096", "--silent", file_path, "-o", temp_file_path]
+    command = ["flac", "--best", "--verify", "--padding=4096", "--silent"]
+
+    if thread_count > 1:
+        command.append(f"--threads={thread_count}")
+
+    command.extend([file_path, "-o", temp_file_path])
 
     try:
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text = True, check=True)
@@ -205,6 +219,16 @@ def rsgain_on_path():
     else:
         return True
 
+def flac_version_check():
+    min_version_pattern = r'^flac (?:(1\.(?:[5-9]|1[0-9])\.\d+)|((2\.\d+\.\d+)))$'
+    flac_version = subprocess.run(["flac", "--version"], encoding='utf-8', stdout=subprocess.PIPE)
+    # Check if the flac version is >=1.5.0 as multi-threading is not available in earlier versions
+    if re.match(min_version_pattern, flac_version.stdout):
+        return
+    else:
+        print (f"The installed flac version: {flac_version.stdout.strip()} does not support multi-threading. Install v1.5.0 or later or rerun without -j.")
+        sys.exit()
+
 def main(args):
     args = parse_arguments()
     directory = args.directory
@@ -214,34 +238,51 @@ def main(args):
     calc_rsgain = args.rsgain
     single_folder = args.single_folder
     test_run = args.test
+    multi_threaded = args.j
 
-    # Check if flac.exe is available on PATH and abort if it is not.
+    # Check if flac executable is available on PATH and abort if it is not.
     flac_on_path()
+
     if calc_rsgain:
-        # Check if rsgain.exe is available on PATH and abort if it is not.
+        # Check if rsgain executable is available on PATH and abort if it is not.
         calc_rsgain = rsgain_on_path()
 
     # Collect paths of all .flac files
     flac_files = find_flac_files(directory, single_folder, progress)
     error_log = []
     error_count = 0
-    # Calculate replay gain tags and write them to the tags
+
+    # Calculate replay gain values and write them to the tags
     if calc_rsgain:
         run_rsgain(directory, thread_count)
+
     if not test_run:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
-            # Submit tasks to the executor
-            futures = {executor.submit(reencode_flac, filepath): filepath for filepath in flac_files}
-            
-            # Track progress using tqdm
-            with tqdm(total=len(flac_files), desc="encoding", unit=" files", disable=not progress, ncols=100) as pbar:
-                for future in concurrent.futures.as_completed(futures):
-                    filepath, stderr = future.result()
+        # Encode files 1 at a time with multiple threads
+        if multi_threaded:
+            flac_version_check()
+            with tqdm(total=len(flac_files), desc="encoding", unit="files", disable=not progress, ncols=100) as pbar:
+                for flac_file in flac_files:
+                    filepath, stderr = reencode_flac(flac_file, thread_count)
                     if stderr:
                         error_log.append((filepath, stderr))
                         error_count += 1
                         pbar.set_postfix({"errors": error_count})
                     pbar.update(1)
+        # Encode multiple files concurrently
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
+                # Submit tasks to the executor
+                futures = {executor.submit(reencode_flac, filepath): filepath for filepath in flac_files}
+                
+                # Track progress using tqdm
+                with tqdm(total=len(flac_files), desc="encoding", unit=" files", disable=not progress, ncols=100) as pbar:
+                    for future in concurrent.futures.as_completed(futures):
+                        filepath, stderr = future.result()
+                        if stderr:
+                            error_log.append((filepath, stderr))
+                            error_count += 1
+                            pbar.set_postfix({"errors": error_count})
+                        pbar.update(1)
     else:
         with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
             # Submit tasks to the executor
