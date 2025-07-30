@@ -18,6 +18,7 @@ BOLD = "\033[1m"
 
 def parse_arguments():
     def dir_path(path):
+        path = path.strip('"\'')
         abs_path = os.path.abspath(os.path.expanduser(path))
         if os.path.isdir(abs_path) and abs_path is not None:
             return abs_path
