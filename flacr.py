@@ -67,14 +67,14 @@ def parse_arguments():
 def find_flac_files(directory, single_folder, progress):
     flac_files = []
     if not single_folder:
-        with tqdm(desc="searching", unit="file", unit_scale=True, disable=not progress, ncols=100) as pbar:
+        with tqdm(desc="searching", unit=" file", unit_scale=True, disable=not progress, ncols=100) as pbar:
             for root, dirs, files in os.walk(directory):
                 for file in files:
                     pbar.update(1)
                     if file.lower().endswith(".flac"):
                         flac_files.append(os.path.abspath(os.path.join(root, file)))
     else:
-        with tqdm(desc="searching", unit="file", unit_scale=True, disable=not progress, ncols=100) as pbar:
+        with tqdm(desc="searching", unit=" file", unit_scale=True, disable=not progress, ncols=100) as pbar:
             for file in os.listdir(directory):
                 pbar.update(1)
                 if file.lower().endswith(".flac"):
@@ -252,7 +252,7 @@ def main(args):
     if not test_run:
         if multi_threaded:
             flac_version_check()
-            with tqdm(total=len(flac_files), desc="encoding", unit="file", unit_scale=True, disable=not progress, ncols=100) as pbar:
+            with tqdm(total=len(flac_files), desc="encoding", unit=" file", unit_scale=True, disable=not progress, ncols=100) as pbar:
                 for flac_file in flac_files:
                     filepath, stderr, before_size, after_size = reencode_flac(flac_file, thread_count)
                     size_stats.append((before_size, after_size))
@@ -264,7 +264,7 @@ def main(args):
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
                 futures = {executor.submit(reencode_flac, filepath): filepath for filepath in flac_files}
-                with tqdm(total=len(flac_files), desc="encoding", unit="file", unit_scale=True, disable=not progress, ncols=100) as pbar:
+                with tqdm(total=len(flac_files), desc="encoding", unit=" file", unit_scale=True, disable=not progress, ncols=100) as pbar:
                     for future in concurrent.futures.as_completed(futures):
                         filepath, stderr, before_size, after_size = future.result()
                         size_stats.append((before_size, after_size))
@@ -276,7 +276,7 @@ def main(args):
     else:
         with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
             futures = {executor.submit(verify_flac, filepath): filepath for filepath in flac_files}
-            with tqdm(total=len(flac_files), desc="verifying", unit="file", unit_scale=True, disable=not progress, ncols=100) as pbar:
+            with tqdm(total=len(flac_files), desc="verifying", unit=" file", unit_scale=True, disable=not progress, ncols=100) as pbar:
                 for future in concurrent.futures.as_completed(futures):
                     filepath, stderr = future.result()
                     if stderr:
