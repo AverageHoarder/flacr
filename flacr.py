@@ -18,8 +18,9 @@ BOLD = "\033[1m"
 
 def parse_arguments():
     def dir_path(path):
-        if os.path.isdir(path) and path is not None:
-            return path
+        abs_path = os.path.abspath(os.path.expanduser(path))
+        if os.path.isdir(abs_path) and abs_path is not None:
+            return abs_path
         else:
             raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid path")
     class thread_count:
@@ -69,14 +70,14 @@ def find_flac_files(directory, single_folder, progress):
             for root, dirs, files in os.walk(directory):
                 for file in files:
                     pbar.update(1)
-                    if file.endswith(".flac"):
-                        flac_files.append(os.path.join(os.path.abspath(root), file))
+                    if file.lower().endswith(".flac"):
+                        flac_files.append(os.path.abspath(os.path.join(root, file)))
     else:
         with tqdm(desc="searching", unit=" file", unit_scale=True, disable=not progress, ncols=100) as pbar:
             for file in os.listdir(directory):
                 pbar.update(1)
-                if file.endswith(".flac"):
-                    flac_files.append(os.path.join(os.path.abspath(directory), file))
+                if file.lower().endswith(".flac"):
+                    flac_files.append(os.path.abspath(os.path.join(directory, file)))
     return flac_files
 
 def verify_flac(file_path):
@@ -105,7 +106,7 @@ def reencode_flac(file_path, thread_count=1):
             try:
                 os.remove(file_path)
                 os.rename(temp_file_path, file_path)
-            except PermissionError as e:
+            except PermissionError:
                 print(f"Could not replace {file_path} because it is locked. The temporary file remains: {temp_file_path}")
                 print(f"Please close any programs using {file_path} and manually replace it with {temp_file_path}.")
                 return file_path, "File locked. Manual replacement required.", before_size, after_size
