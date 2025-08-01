@@ -10,10 +10,31 @@ from tqdm import tqdm
 from datetime import datetime
 import re
 
+# ANSI color codes for the compression report
+CYAN = '\033[96m'
+YELLOW = '\033[93m'
+GREEN = '\033[92m'
+RED = '\033[91m'
+BOLD = '\033[1m'
+RESET = '\033[0m'
+
+def human_readable_size(size_bytes):
+    """Convert bytes to human readable format"""
+    if size_bytes == 0:
+        return "0 B"
+    size_names = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    while size_bytes >= 1024 and i < len(size_names) - 1:
+        size_bytes /= 1024.0
+        i += 1
+    return f"{size_bytes:.2f} {size_names[i]}"
+
 def parse_arguments():
     def dir_path(path):
-        if os.path.isdir(path) and path != None:
-            return path
+        # Fix: Use os.path.abspath to handle paths with spaces properly
+        abs_path = os.path.abspath(path)
+        if os.path.isdir(abs_path) and path != None:
+            return abs_path
         else:
             raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid path")
     
@@ -88,11 +109,14 @@ def verify_flac(file_path):
     command = ["flac", "-t", "--silent", file_path]
     try:
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-        return file_path, result.stderr
+        return file_path, result.stderr, None, None
     except subprocess.CalledProcessError as e:
-        return file_path, e.stderr
+        return file_path, e.stderr, None, None
 
 def reencode_flac(file_path, thread_count=1):
+    # Get original file size for statistics
+    original_size = os.path.getsize(file_path)
+    
     # Define the temporary output file path
     temp_file_path = file_path + ".tmp"
 
@@ -109,7 +133,11 @@ def reencode_flac(file_path, thread_count=1):
         if result.stderr:
             print(f"Error encountered while re-encoding {file_path}:\n{result.stderr}")
             os.remove(temp_file_path)
+            return file_path, result.stderr, original_size, original_size
         else:
+            # Get new file size before replacing
+            new_size = os.path.getsize(temp_file_path)
+            
             # Replace the original file with the temporary file
             try:
                 os.remove(file_path)
@@ -117,11 +145,11 @@ def reencode_flac(file_path, thread_count=1):
             except PermissionError as e:
                 print(f"Could not replace {file_path} because it is locked. The temporary file remains: {temp_file_path}")
                 print(f"Please close any programs using {file_path} and manually replace it with {temp_file_path}.")
-                return file_path, "File locked. Manual replacement required."
-        return file_path, result.stderr
+                return file_path, "File locked. Manual replacement required.", original_size, original_size
+        return file_path, result.stderr, original_size, new_size
     except subprocess.CalledProcessError as e:
         # If an error occurs, return the filepath and stderr
-        return file_path, e.stderr
+        return file_path, e.stderr, original_size, original_size
 
 def run_rsgain(directory, thread_count):
     #set rsgain thread count to at least 2 to prevent windows cli limitations to hinder performance
@@ -151,23 +179,21 @@ def flac_on_path():
         if choice == "y":
             print(f"""
     Step 1: Under 'User variables for {getpass.getuser()}' select 'Path' and either double click it or click on 'Edit...'
-    Step 2: Click on 'New' and paste the path to the folder on your system that contains flac.exe.
+    Step 2: Click on 'New' and paste the FOLDER PATH that contains flac.exe (not the .exe file itself).
+            Example: If flac.exe is in "C:\\Tools\\flac\\Win64\\flac.exe", 
+            then add: "C:\\Tools\\flac\\Win64"
             Then confirm with "OK" twice.
 
-            Info:
-            If you do not have flac installed yet, visit this website (or download it from a source you trust):
-            https://xiph.org/flac/download.html
-            Then click on FLAC for Windows, select the most recent "flac-x.x.x-win.zip" file, download it and unpack it.
-            You can pretty much put the folder wherever you like.
-            My flac executable (as of writing) for example is located in
-            C:\\Program Files (x86)\\flac-1.4.3-win\\Win64
-            Once you have decided on where to store it, add that path to PATH as described above.
+            Download Info:
+            If you don't have FLAC installed yet, visit: https://xiph.org/flac/download.html
+            • Click on "FLAC for Windows"
+            • Download the latest "flac-x.x.x-win.zip" file
+            • Extract it anywhere you prefer (e.g., C:\\Tools\\flac-1.4.3-win)
+            • Use the Win64 folder path for 64-bit systems: C:\\Tools\\flac-1.4.3-win\\Win64
 
-            Note:
-            You can also add the folder that contains this script to PATH in the same way
-            if you want to call it from any folder.
+            Tip: You can also add this script's folder to PATH to run it from anywhere.
 
-    Step 3: Once that is done, re-run this script.""")
+    Step 3: Once PATH is updated, restart this script.""")
             try:
                 subprocess.run(["rundll32.exe", "sysdm.cpl,EditEnvironmentVariables"])
             except subprocess.CalledProcessError:
@@ -188,23 +214,20 @@ def rsgain_on_path():
         if choice == "y":
             print(f"""
     Step 1: Under 'User variables for {getpass.getuser()}' select 'Path' and either double click it or click on 'Edit...'
-    Step 2: Click on 'New' and paste the path to the folder on your system that contains rsgain.exe.
+    Step 2: Click on 'New' and paste the FOLDER PATH that contains rsgain.exe (not the .exe file itself).
+            Example: If rsgain.exe is in "C:\\Tools\\rsgain\\rsgain.exe", 
+            then add: "C:\\Tools\\rsgain"
             Then confirm with "OK" twice.
 
-            Info:
-            If you do not have flac installed yet, visit this website:
-            https://github.com/complexlogic/rsgain/releases
-            Then under Assets, select the most recent "rsgain-x.x-win64.zip" file, download it and unpack it.
-            You can pretty much put the folder wherever you like.
-            My rsgain executable (as of writing) for example is located in
-            C:\\Program Files (x86)\\rsgain-3.5-win64
-            Once you have decided on where to store it, add that path to PATH as described above.
+            Download Info:
+            If you don't have rsgain installed yet, visit: https://github.com/complexlogic/rsgain/releases
+            • Under "Assets", download the latest "rsgain-x.x-win64.zip" file
+            • Extract it anywhere you prefer (e.g., C:\\Tools\\rsgain-3.5-win64)
+            • Add the main folder path to PATH: C:\\Tools\\rsgain-3.5-win64
 
-            Note:
-            You can also add the folder that contains this script to PATH in the same way
-            if you want to call it from any folder.
+            Tip: You can also add this script's folder to PATH to run it from anywhere.
 
-    Step 3: Once that is done, re-run this script.""")
+    Step 3: Once PATH is updated, restart this script.""")
             try:
                 subprocess.run(["rundll32.exe", "sysdm.cpl,EditEnvironmentVariables"])
             except subprocess.CalledProcessError:
@@ -251,6 +274,7 @@ def main(args):
     flac_files = find_flac_files(directory, single_folder, progress)
     error_log = []
     error_count = 0
+    size_stats = []  # Store (original_size, new_size) tuples
 
     # Calculate replay gain values and write them to the tags
     if calc_rsgain:
@@ -262,7 +286,8 @@ def main(args):
             flac_version_check()
             with tqdm(total=len(flac_files), desc="encoding", unit="files", disable=not progress, ncols=100) as pbar:
                 for flac_file in flac_files:
-                    filepath, stderr = reencode_flac(flac_file, thread_count)
+                    filepath, stderr, original_size, new_size = reencode_flac(flac_file, thread_count)
+                    size_stats.append((original_size, new_size))
                     if stderr:
                         error_log.append((filepath, stderr))
                         error_count += 1
@@ -277,7 +302,8 @@ def main(args):
                 # Track progress using tqdm
                 with tqdm(total=len(flac_files), desc="encoding", unit=" files", disable=not progress, ncols=100) as pbar:
                     for future in concurrent.futures.as_completed(futures):
-                        filepath, stderr = future.result()
+                        filepath, stderr, original_size, new_size = future.result()
+                        size_stats.append((original_size, new_size))
                         if stderr:
                             error_log.append((filepath, stderr))
                             error_count += 1
@@ -291,7 +317,7 @@ def main(args):
             # Track progress using tqdm
             with tqdm(total=len(flac_files), desc="verifying", unit=" files", disable=not progress, ncols=100) as pbar:
                 for future in concurrent.futures.as_completed(futures):
-                    filepath, stderr = future.result()
+                    filepath, stderr, _, _ = future.result()
                     if stderr:
                         error_log.append((filepath, stderr))
                         error_count += 1
@@ -303,8 +329,26 @@ def main(args):
     else:
         for path, error in error_log:
             print (f"Encountered error when processing file:\n{path}\n{error}")
+    
     percentage = (error_count / len(flac_files)) * 100 if len(flac_files) > 0 else 0
-    print(f"\n{len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage:.2f} %.")
+    
+    if error_count > 0:
+        print(f"\n{RED}{BOLD}⚠ {len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage:.2f}%{RESET}")
+    else:
+        print(f"\n{len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage:.2f} %.")
+    
+    # Display compression statistics for non-test runs
+    if not test_run and size_stats:
+        original_total = sum(before for before, after in size_stats)
+        new_total = sum(after for before, after in size_stats)
+        saved = original_total - new_total
+        percent_saved = (saved / original_total) * 100 if original_total > 0 else 0
+        
+        print(f"\n{CYAN}{BOLD}══════════════════ FLAC Compression Report ══════════════════{RESET}")
+        print(f"{YELLOW}Original size:   {CYAN}{human_readable_size(original_total):<15}{RESET}")
+        print(f"{YELLOW}Compressed size: {CYAN}{human_readable_size(new_total):<15}{RESET}")
+        print(f"{YELLOW}Space saved:     {GREEN}{human_readable_size(saved):<15} ({percent_saved:.2f}%){RESET}")
+        print(f"{CYAN}{BOLD}═════════════════════════════════════════════════════════════{RESET}\n")
 
 if __name__ == "__main__":
     args = parse_arguments()
