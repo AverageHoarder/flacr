@@ -49,7 +49,7 @@ def parse_arguments():
         
     parser = argparse.ArgumentParser(description='Scan for .flac files in subdirectories, recompress them and optionally calculate replay gain tags.')
     parser.add_argument('-d', '--directory',
-                        help='The directory that will be recursively scanned for .lrc and .txt files.', type=dir_path, default=".", const=".", nargs="?")
+                        help='The directory that will be recursively scanned for .flac files.', type=dir_path, default=".", const=".", nargs="?")
     parser.add_argument('-j', action='store_true',
                         help='flac >=1.5.0: Encode 1 file at a time with multi-threading (threadcount specified via -m) instead of encoding multiple files concurrently.')
     parser.add_argument('-l', '--log', action='count',
@@ -57,7 +57,7 @@ def parse_arguments():
     parser.add_argument('-m', '--multi_threaded', type=thread_count, default=1, const=1, nargs="?",
                         help='The number of threads used during conversion and replay gain calculation, default: 1.')
     parser.add_argument('-p', '--progress', action='store_true',
-                        help='Show progress bars during scanning/recompression/testing. Useful for huge directories. Requires tqdm, use "pip3 install tqdm" to install it.')
+                        help='Show progress bars during scanning/recompression/testing. Useful for large directories. Requires tqdm, use "pip3 install tqdm" to install it.')
     parser.add_argument('-r', '--rsgain', action='store_true',
                         help='Calculate replay gain values with rsgain and save them in the audio file tags.')
     parser.add_argument('-s', '--single_folder', action='store_true',
@@ -65,9 +65,9 @@ def parse_arguments():
     parser.add_argument('-t', '--test', action='store_true',
                         help='Skip recompression and only log decoding errors to console or log when used with -l.')
     parser.add_argument('-Q', '--quick', action='store_true',
-                        help='Equal to using -m with the max available threadcount, -r to calculate replay gain values and -p to display a progress bar.')
+                        help='Equivalent to using -m with the max available threadcount, -r to calculate replay gain values and -p to display a progress bar.')
     parser.add_argument('-S', '--sequential', action='store_true',
-                        help='Equal to using -m 4 -j to encode 1 file at a time with 4 threads, -r to calculate replay gain values and -p to display a progress bar.')
+                        help='Equivalent to using -m 4 -j to encode 1 file at a time with 4 threads, -r to calculate replay gain values and -p to display a progress bar.')
 
     args: argparse.Namespace = parser.parse_args()
 
@@ -90,7 +90,7 @@ def find_flac_files(directory, single_folder, progress):
             for root, dirs, files in os.walk(directory):
                 for file in files:
                     pbar.update(1)
-                    if file.endswith(".flac"):
+                    if file.lower().endswith(".flac"):
                         flac_files.append(os.path.join(os.path.abspath(root), file))
                         flac_count += 1
                         pbar.set_postfix({"flac files": flac_count})
@@ -98,7 +98,7 @@ def find_flac_files(directory, single_folder, progress):
         with tqdm(desc="searching", unit=" files", disable=not progress, ncols=100) as pbar:
             flac_count = 0
             for file in os.listdir(directory):
-                if file.endswith(".flac"):
+                if file.lower().endswith(".flac"):
                     flac_files.append(os.path.join(os.path.abspath(directory), file))
                     flac_count += 1
                     pbar.set_postfix({"flac files": flac_count})
@@ -129,7 +129,7 @@ def reencode_flac(file_path, thread_count=1):
     command.extend([file_path, "-o", temp_file_path])
 
     try:
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text = True, check=True)
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         if result.stderr:
             print(f"Error encountered while re-encoding {file_path}:\n{result.stderr}")
             os.remove(temp_file_path)
@@ -188,8 +188,8 @@ def flac_on_path():
             If you don't have FLAC installed yet, visit: https://xiph.org/flac/download.html
             • Click on "FLAC for Windows"
             • Download the latest "flac-x.x.x-win.zip" file
-            • Extract it anywhere you prefer (e.g., C:\\Tools\\flac-1.4.3-win)
-            • Use the Win64 folder path for 64-bit systems: C:\\Tools\\flac-1.4.3-win\\Win64
+            • Extract it anywhere you prefer (e.g., C:\\Tools\\flac-1.5.0-win)
+            • Use the Win64 folder path for 64-bit systems: C:\\Tools\\flac-1.5.0-win\\Win64
 
             Tip: You can also add this script's folder to PATH to run it from anywhere.
 
@@ -222,8 +222,8 @@ def rsgain_on_path():
             Download Info:
             If you don't have rsgain installed yet, visit: https://github.com/complexlogic/rsgain/releases
             • Under "Assets", download the latest "rsgain-x.x-win64.zip" file
-            • Extract it anywhere you prefer (e.g., C:\\Tools\\rsgain-3.5-win64)
-            • Add the main folder path to PATH: C:\\Tools\\rsgain-3.5-win64
+            • Extract it anywhere you prefer (e.g., C:\\Tools\\rsgain-3.6-win64)
+            • Add the main folder path to PATH: C:\\Tools\\rsgain-3.6-win64
 
             Tip: You can also add this script's folder to PATH to run it from anywhere.
 
@@ -333,7 +333,7 @@ def main(args):
     percentage = (error_count / len(flac_files)) * 100 if len(flac_files) > 0 else 0
     
     if error_count > 0:
-        print(f"\n{RED}{BOLD}⚠ {len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage:.2f}%{RESET}")
+        print(f"\n{RED}{BOLD}{len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage:.2f}%{RESET}")
     else:
         print(f"\n{len(flac_files)} flac files processed, {error_count} errors. Error rate: {percentage:.2f} %.")
     
