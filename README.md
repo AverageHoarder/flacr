@@ -21,6 +21,11 @@ Flac version 1.5.0 added multi-threaded encoding support. I've added -j and -S t
   * calculate and save replay gain tags for all music files recursively via rsgain
   * display a progress bar while scanning directories and recompressing/testing
   * log errors while recompressing/testing to console or to file
+  * display how much space was saved through the recompression
+
+## Example usage
+### 100 flac tracks from 8 albums by 5 artists (stored on local M.2 SSD)
+![Gif that shows how 100 flac tracks are recompressed with flacr.](/assets/example_gifs/flacr_recompress_100_files.gif)
 
 ## How to install flacr
 
@@ -129,7 +134,7 @@ Alias for -r -p and -m with 4 threads to recompress sequentially and calculate r
 `flacr.py -t -m 4`
 
 * log to file instead<br>
-`flacr.py -tl -m 4"`
+`flacr.py -tl -m 4`
   
 * with progress bar<br>
 `flacr.py -tlp -m 4`
